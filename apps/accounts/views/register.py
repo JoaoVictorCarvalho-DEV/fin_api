@@ -2,8 +2,8 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .services import create_user
-from .serializers import RegisterSerializer
+from ..services.user import create_user
+from ..serializers.register import RegisterSerializer
 
 
 class RegisterView(APIView):
@@ -22,3 +22,4 @@ class RegisterView(APIView):
             RegisterSerializer(user).data,
             status=status.HTTP_201_CREATED
         )
+

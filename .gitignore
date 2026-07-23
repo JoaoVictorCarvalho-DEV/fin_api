@@ -1,0 +1,68 @@
+# =========================
+# Python
+# =========================
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# =========================
+# Virtual Environment
+# =========================
+
+venv/
+env/
+.venv/
+
+# =========================
+# Django
+# =========================
+
+*.log
+db.sqlite3
+db.sqlite3-journal
+
+# Media / uploads
+media/
+
+# Static files generated
+staticfiles/
+
+# =========================
+# Environment variables
+# =========================
+
+.env
+.env.*
+!.env.example
+
+# =========================
+# Django cache
+# =========================
+
+.cache/
+.pytest_cache/
+
+# =========================
+# Testing
+# =========================
+
+.coverage
+htmlcov/
+
+# =========================
+# IDEs
+# =========================
+
+.vscode/
+.idea/
+
+# =========================
+# OS
+# =========================
+
+.DS_Store
+Thumbs.db
