@@ -1,0 +1,5 @@
+from .category_admin import *
+from .financial_account_admin import *
+from .tag_admin import *
+from .transaction_admin import *
+from .receipt_admin import *
