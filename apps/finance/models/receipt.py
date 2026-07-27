@@ -1,5 +1,5 @@
 from decimal import Decimal
-from datetime import datetime
+from django.utils import timezone
 
 from django.core.validators import MinValueValidator
 from django.db import models
@@ -8,7 +8,7 @@ from apps.finance.models.transaction import Transaction
 
 
 def receipt_upload_path(instance, filename):
-    today = datetime.now()
+    today = timezone.now()
 
     return (
         f"receipts/"
@@ -147,19 +147,3 @@ class Receipt(models.Model):
 
     def __str__(self):
         return f"Recibo #{self.pk} - {self.transaction.description}"
-
-    @property
-    def is_ocr_completed(self):
-        return self.ocr_status == self.OCRStatus.COMPLETED
-
-    @property
-    def is_ocr_processing(self):
-        return self.ocr_status == self.OCRStatus.PROCESSING
-
-    @property
-    def is_ocr_failed(self):
-        return self.ocr_status == self.OCRStatus.FAILED
-
-    @property
-    def is_ocr_pending(self):
-        return self.ocr_status == self.OCRStatus.PENDING
