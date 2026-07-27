@@ -1,5 +1,5 @@
-from apps.finance.models import Category
-from django.shortcuts import get_object_or_404
+from apps.finance.models.category import Category
+from apps.finance.exceptions import CategoryNotFoundError, CategoryAlreadyExistsError
 
 def list_categories(user):
     """
@@ -14,12 +14,17 @@ def get_category(user, category_id):
     """
         Recupera uma categoria do usuário.
     """
-    return get_object_or_404(
-        Category,
-        id=category_id,
-        user=user,
-    )
-    
+    category = Category.objects.filter(
+    id=category_id,
+    user=user,
+    is_active=True,
+    ).first()
+
+    if category is None:
+        raise CategoryNotFoundError()
+
+    return category
+
 def create_category(user, validated_data):
     """
     Cria uma categoria para o usuário autenticado.
@@ -30,9 +35,7 @@ def create_category(user, validated_data):
         name=validated_data["name"],
         type=validated_data["type"],
     ).exists():
-        raise ValueError(
-            "Já existe uma categoria com esse nome."
-        )
+        raise CategoryAlreadyExistsError()
 
     return Category.objects.create(
         user=user,
