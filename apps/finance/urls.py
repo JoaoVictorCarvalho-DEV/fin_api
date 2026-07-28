@@ -12,13 +12,11 @@ router.register(
     CategoryViewSet,
     basename="category"
 )
-
 router.register(
-    "financial-accounts",
+    "accounts",
     FinancialAccountViewSet,
     basename="financial-account"
 )
-
 
 urlpatterns = [
     path(

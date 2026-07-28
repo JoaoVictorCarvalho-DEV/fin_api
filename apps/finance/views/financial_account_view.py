@@ -2,6 +2,11 @@ from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from apps.finance.exceptions.financial_account_exceptions import (
+    FinancialAccountNotFoundError,
+    FinancialAccountAlreadyExistsError,
+)
+
 from drf_spectacular.utils import (
     extend_schema,
     OpenApiResponse,
@@ -65,16 +70,26 @@ class FinancialAccountViewSet(viewsets.ViewSet):
         },
         tags=["Financial Accounts"],
     )
+    
     def retrieve(self, request, pk=None):
 
-        account = FinancialAccountService.get_by_id(
-            user=request.user,
-            account_id=pk
-        )
+        try:
+            account = FinancialAccountService.get_by_id(
+                user=request.user,
+                account_id=pk
+            )
 
-        serializer = FinancialAccountSerializer(
-            account
-        )
+        except FinancialAccountNotFoundError as error:
+
+            return Response(
+                {
+                    "detail": str(error)
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+        serializer = FinancialAccountSerializer(account)
 
         return Response(
             serializer.data
@@ -110,10 +125,21 @@ class FinancialAccountViewSet(viewsets.ViewSet):
         )
 
 
-        account = FinancialAccountService.create(
-            user=request.user,
-            data=serializer.validated_data
-        )
+        try:
+
+            account = FinancialAccountService.create(
+                user=request.user,
+                validated_data=serializer.validated_data
+            )
+
+        except FinancialAccountAlreadyExistsError as error:
+
+            return Response(
+                {
+                    "detail": str(error)
+                },
+                status=status.HTTP_409_CONFLICT
+            )
 
 
         return Response(
@@ -133,6 +159,9 @@ class FinancialAccountViewSet(viewsets.ViewSet):
             ),
             401: OpenApiResponse(
                 description="Usuário não autenticado"
+            ),
+            404: OpenApiResponse(
+                description="Conta não encontrada"
             ),
         },
         tags=["Financial Accounts"],
@@ -178,6 +207,9 @@ class FinancialAccountViewSet(viewsets.ViewSet):
             401: OpenApiResponse(
                 description="Usuário não autenticado"
             ),
+            404: OpenApiResponse(
+                description="Conta não encontrada"
+            ),
         },
         tags=["Financial Accounts"],
     )
@@ -221,6 +253,9 @@ class FinancialAccountViewSet(viewsets.ViewSet):
             401: OpenApiResponse(
                 description="Usuário não autenticado"
             ),
+            404: OpenApiResponse(
+                description="Conta não encontrada"
+            ),
         },
         tags=["Financial Accounts"],
     )
@@ -231,10 +266,7 @@ class FinancialAccountViewSet(viewsets.ViewSet):
             account_id=pk
         )
 
-        FinancialAccountService.delete(
-            account
-        )
-
+        FinancialAccountService.delete(account)
 
         return Response(
             status=status.HTTP_204_NO_CONTENT
