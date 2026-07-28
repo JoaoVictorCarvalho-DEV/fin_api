@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 
-from ..serializers.category import CategorySerializer
+from ..serializers.category_serializer import CategorySerializer
 from ..services.category import list_categories, create_category, get_category, update_category, delete_category
 from ..exceptions import CategoryNotFoundError
 

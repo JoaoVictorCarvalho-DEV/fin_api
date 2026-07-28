@@ -74,6 +74,7 @@ class FinancialAccount(models.Model):
         verbose_name_plural = 'Contas Financeiras'
         ordering = ['name']
         indexes = [
+            models.Index(fields=["user"]),
             models.Index(fields=["account_type"]),
             models.Index(fields=["is_active"]),
             models.Index(fields=["user", "is_active"]),
@@ -92,16 +93,15 @@ class FinancialAccount(models.Model):
         return f"{self.name} - {self.get_account_type_display()}"
     
     def clean(self):
-
         if (
             self.account_type != self.AccountType.CREDIT_CARD
-            and (
-                self.credit_limit is not None
-                or self.closing_day
-                or self.due_day
-            )
+            and any([
+                self.credit_limit is not None,
+                self.closing_day is not None,
+                self.due_day is not None,
+            ])
         ):
             raise ValidationError(
-                "Esses campos só podem ser utilizados em cartões de crédito."
+                "Limite, fechamento e vencimento só podem ser usados em cartão de crédito."
             )
     
