@@ -1,10 +1,11 @@
-class CategoryError(Exception):
-    """Exceção base para categoria."""
+from apps.core.exceptions import (
+    NotFoundError,
+    AlreadyExistsError,
+)
 
-
-class CategoryNotFoundError(CategoryError):
+class CategoryNotFoundError(NotFoundError):
     """Categoria não encontrada."""
 
 
-class CategoryAlreadyExistsError(CategoryError):
+class CategoryAlreadyExistsError(AlreadyExistsError):
     """Já existe uma categoria com esse nome para o usuário."""

@@ -1,65 +1,117 @@
+from django.db import transaction
+
 from apps.finance.models.category import Category
-from apps.finance.exceptions import CategoryNotFoundError, CategoryAlreadyExistsError
+from apps.finance.exceptions import (
+    CategoryNotFoundError,
+    CategoryAlreadyExistsError,
+)
 
-def list_categories(user):
-    """
-        Lista as categorias do usuário autenticado.
-    """
-    return Category.objects.filter(
-        user=user,
-        is_active=True,
-    ).order_by("type", "name")
 
-def get_category(user, category_id):
-    """
-        Recupera uma categoria do usuário.
-    """
-    category = Category.objects.filter(
-    id=category_id,
-    user=user,
-    is_active=True,
-    ).first()
+class CategoryService:
 
-    if category is None:
-        raise CategoryNotFoundError()
 
-    return category
+    @staticmethod
+    def list(user):
 
-def create_category(user, validated_data):
-    """
-    Cria uma categoria para o usuário autenticado.
-    """
+        return Category.objects.filter(
+            user=user,
+            is_active=True,
+        ).order_by(
+            "type",
+            "name",
+        )
 
-    if Category.objects.filter(
-        user=user,
-        name=validated_data["name"],
-        type=validated_data["type"],
-    ).exists():
-        raise CategoryAlreadyExistsError()
 
-    return Category.objects.create(
-        user=user,
-        **validated_data,
-    )
-    
-def update_category(category, validated_data):
-    """
-        Atualiza uma categoria para o usuário autenticado.
-    """
+    @staticmethod
+    def get_by_id(user, category_id):
 
-    for field, value in validated_data.items():
-        setattr(category, field, value)
+        category = Category.objects.filter(
+            id=category_id,
+            user=user,
+            is_active=True,
+        ).first()
 
-    category.save()
+        if category is None:
+            raise CategoryNotFoundError(
+                "Categoria não encontrada."
+            )
 
-    return category
+        return category
 
-def delete_category(category):
-    """
-        Desativa uma categoria.
-    """
 
-    category.is_active = False
-    category.save()
+    @staticmethod
+    def create(user, data):
 
-    return category
+        if Category.objects.filter(
+            user=user,
+            name=data["name"],
+            type=data["type"],
+        ).exists():
+
+            raise CategoryAlreadyExistsError(
+                "Já existe uma categoria com esse nome."
+            )
+
+
+        with transaction.atomic():
+
+            return Category.objects.create(
+                user=user,
+                **data,
+            )
+
+
+    @staticmethod
+    def update(category, data):
+
+        name = data.get(
+            "name",
+            category.name
+        )
+
+        category_type = data.get(
+            "type",
+            category.type
+        )
+
+
+        if Category.objects.filter(
+            user=category.user,
+            name=name,
+            type=category_type,
+        ).exclude(
+            id=category.id
+        ).exists():
+
+            raise CategoryAlreadyExistsError(
+                "Já existe uma categoria com esse nome."
+            )
+
+
+        with transaction.atomic():
+
+            for field, value in data.items():
+                setattr(
+                    category,
+                    field,
+                    value
+                )
+
+            category.save()
+
+
+        return category
+
+
+    @staticmethod
+    def deactivate(category):
+
+        category.is_active = False
+
+        category.save(
+            update_fields=[
+                "is_active"
+            ]
+        )
+
+        return category
