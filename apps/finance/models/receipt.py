@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from apps.finance.models.transaction import Transaction
-
+from django.core.exceptions import ValidationError
 
 def receipt_upload_path(instance, filename):
     today = timezone.now()
@@ -86,7 +86,7 @@ class Receipt(models.Model):
 
     total_amount = models.DecimalField(
         "Valor Total",
-        max_digits=12,
+        max_digits=10,
         decimal_places=2,
         null=True,
         blank=True,
@@ -132,18 +132,23 @@ class Receipt(models.Model):
         verbose_name_plural = "Recibos"
 
         indexes = [
-            models.Index(fields=["transaction"]),
             models.Index(fields=["ocr_status"]),
             models.Index(fields=["supplier_name"]),
             models.Index(fields=["ocr_status", "created_at"]),
         ]
 
-        constraints = [
-            models.CheckConstraint(
-                condition=models.Q(total_amount__gte=0),
-                name="receipt_total_amount_positive",
-            ),
-        ]
 
     def __str__(self):
-        return f"Recibo #{self.pk} - {self.transaction.description}"
+        return (
+            f"Recibo #{self.pk} - "
+            f"{self.transaction.description}"
+        )
+    
+    def clean(self):
+        if (
+            self.ocr_status == self.OCRStatus.COMPLETED
+            and self.ocr_processed_at is None
+        ):
+            raise ValidationError(
+                "Informe a data de processamento do OCR."
+            )

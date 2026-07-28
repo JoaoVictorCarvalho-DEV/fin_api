@@ -7,24 +7,32 @@ from apps.finance.models.recurring_transaction import RecurringTransaction
 class RecurringTransactionAdmin(admin.ModelAdmin):
 
     list_display = (
+        "description",
         "user",
+        "account",
+        "category",
+        "transaction_type",
+        "amount",
         "frequency",
-        "start_date",
         "next_execution",
         "is_active",
-        "created_at",
     )
 
     list_filter = (
+        "transaction_type",
         "frequency",
         "is_active",
+        "category",
         "created_at",
     )
 
     search_fields = (
+        "description",
         "user__email",
         "user__first_name",
         "user__last_name",
+        "account__name",
+        "category__name",
     )
 
     ordering = (
@@ -38,6 +46,8 @@ class RecurringTransactionAdmin(admin.ModelAdmin):
 
     autocomplete_fields = (
         "user",
+        "account",
+        "category",
     )
 
     fieldsets = (
@@ -46,26 +56,31 @@ class RecurringTransactionAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "user",
+                    "description",
+                    "transaction_type",
+                    "amount",
+                    "notes",
+                )
+            },
+        ),
+        (
+            "Relacionamentos",
+            {
+                "fields": (
+                    "account",
+                    "category",
+                )
+            },
+        ),
+        (
+            "Recorrência",
+            {
+                "fields": (
                     "frequency",
-                    "is_active",
-                )
-            },
-        ),
-        (
-            "Template da Transação",
-            {
-                "fields": (
-                    "transaction_template",
-                )
-            },
-        ),
-        (
-            "Agendamento",
-            {
-                "fields": (
                     "start_date",
                     "end_date",
                     "next_execution",
+                    "is_active",
                 )
             },
         ),
