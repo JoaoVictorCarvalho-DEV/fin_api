@@ -172,36 +172,3 @@ class Transaction(models.Model):
                 }
             )
     
-    @property
-    def is_income(self):
-        return self.type == 'INCOME'
-    
-    @property
-    def is_expense(self):
-        return self.type == 'EXPENSE'
-    
-    @property
-    def is_transfer(self):
-        return self.type == 'TRANSFER'
-    
-    @property
-    def is_completed(self):
-        return self.status == 'COMPLETED'
-    
-    @property
-    def is_pending(self):
-        return self.status == 'PENDING'
-    
-    @property
-    def is_canceled(self):
-        return self.status == 'CANCELED'
-    
-    @property
-    def is_installment(self):
-        return self.installment_number is not None
-    
-    @property
-    def installment_info(self):
-        if self.is_installment:
-            return f"{self.installment_number}/{self.total_installments}"
-        return None

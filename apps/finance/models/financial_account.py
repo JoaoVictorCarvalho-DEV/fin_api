@@ -3,30 +3,31 @@ from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 
+from jsonschema import ValidationError
+
 class FinancialAccount(models.Model):
     """
     Contas financeiras do usuário
     Representa onde está o dinheiro
     """
     
-    ACCOUNT_TYPES = [
-        ('BANK', 'Banco'),
-        ('CASH', 'Dinheiro'),
-        ('CREDIT_CARD', 'Cartão de Crédito'),
-        ('INVESTMENT', 'Investimento'),
-        ('OTHER', 'Outro'),
-    ]
-    
+    class AccountType(models.TextChoices):
+        BANK = "BANK", "Banco"
+        CASH = "CASH", "Dinheiro"
+        CREDIT_CARD = "CREDIT_CARD", "Cartão de Crédito"
+        INVESTMENT = "INVESTMENT", "Investimento"
+        OTHER = "OTHER", "Outro"
+        
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name='accounts'
     )
     name = models.CharField('Nome', max_length=100)
-    type = models.CharField(
+    account_type = models.CharField(
         'Tipo', 
         max_length=20, 
-        choices=ACCOUNT_TYPES
+        choices=AccountType.choices
     )
     initial_balance = models.DecimalField(
         'Saldo Inicial',
@@ -73,74 +74,34 @@ class FinancialAccount(models.Model):
         verbose_name_plural = 'Contas Financeiras'
         ordering = ['name']
         indexes = [
-            models.Index(fields=['user']),
-            models.Index(fields=['type']),
-            models.Index(fields=['is_active']),
+            models.Index(fields=["account_type"]),
+            models.Index(fields=["is_active"]),
+            models.Index(fields=["user", "is_active"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "user",
+                    "name"
+                ],
+                name="unique_account_name_per_user"
+            )
         ]
     
     def __str__(self):
-        return f"{self.name} - {self.get_type_display()}"
+        return f"{self.name} - {self.get_account_type_display()}"
     
-    @property
-    def current_balance(self):
-        """Calcula o saldo atual baseado nas transações"""
-        from django.db.models import Sum, Case, When, F, DecimalField, Q
-        
-        transactions = self.transactions.filter(status='COMPLETED')
-        
-        # Agregação para calcular saldo
-        balance = transactions.aggregate(
-            total=Sum(
-                Case(
-                    When(type='INCOME', then='amount'),
-                    When(type='EXPENSE', then=-F('amount')),
-                    When(
-                        type='TRANSFER',
-                        then=Case(
-                            When(account_id=self.id, then=-F('amount')),
-                            default='amount',
-                            output_field=DecimalField()
-                        )
-                    ),
-                    default=0,
-                    output_field=DecimalField()
-                )
+    def clean(self):
+
+        if (
+            self.account_type != self.AccountType.CREDIT_CARD
+            and (
+                self.credit_limit is not None
+                or self.closing_day
+                or self.due_day
             )
-        )['total'] or Decimal('0.00')
-        
-        return self.initial_balance + balance
-    
-    @property
-    def is_credit_card(self):
-        """Verifica se é cartão de crédito"""
-        return self.type == 'CREDIT_CARD'
-    
-    def get_balance_on_date(self, date):
-        """Retorna o saldo em uma data específica"""
-        from django.db.models import Sum, Case, When, F, DecimalField, Q
-        
-        transactions = self.transactions.filter(
-            status='COMPLETED',
-            date__lte=date
-        )
-        
-        balance = transactions.aggregate(
-            total=Sum(
-                Case(
-                    When(type='INCOME', then='amount'),
-                    When(type='EXPENSE', then=-F('amount')),
-                    When(
-                        type='TRANSFER',
-                        then=Case(
-                            When(account_id=self.id, then=-F('amount')),
-                            default='amount',
-                            output_field=DecimalField()
-                        )
-                    ),
-                    default=0,
-                    output_field=DecimalField()
-                )
+        ):
+            raise ValidationError(
+                "Esses campos só podem ser utilizados em cartões de crédito."
             )
-        )['total'] or Decimal('0.00')
-        
-        return self.initial_balance + balance
+    

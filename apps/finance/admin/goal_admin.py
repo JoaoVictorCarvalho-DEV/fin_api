@@ -1,49 +1,39 @@
 from django.contrib import admin
 
-from apps.finance.models.financial_account import FinancialAccount
+from apps.finance.models.goal import Goal
 
 
-@admin.register(FinancialAccount)
-class FinancialAccountAdmin(admin.ModelAdmin):
+@admin.register(Goal)
+class GoalAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "name",
-        "account_type",
         "user",
-        "is_active",
-        "initial_balance",
-        "description",
-        "institution",
-        "account_number",
-        "agency_number",
-        "credit_limit",
-        "closing_day",
-        "due_day",
-        "updated_at",
+        "status",
+        "target_amount",
+        "saved_amount",
+        "priority",
+        "target_date",
         "created_at",
     )
 
     list_filter = (
-        "account_type",
-        "institution",
-        "is_active",
+        "status",
+        "priority",
+        "category",
         "created_at",
-        "updated_at",
     )
 
     search_fields = (
         "name",
-        "institution",
-        "account_number",
-        "agency_number",
         "user__email",
         "user__first_name",
         "user__last_name",
+        "category__name",
     )
 
     ordering = (
-        "user",
-        "name",
+        "-priority",
+        "target_date",
     )
 
     readonly_fields = (
@@ -51,7 +41,11 @@ class FinancialAccountAdmin(admin.ModelAdmin):
         "updated_at",
     )
 
-    list_per_page = 25
+    autocomplete_fields = (
+        "user",
+        "category",
+        "related_account",
+    )
 
     fieldsets = (
         (
@@ -60,19 +54,9 @@ class FinancialAccountAdmin(admin.ModelAdmin):
                 "fields": (
                     "user",
                     "name",
-                    "account_type",
-                    "institution",
                     "description",
-                    "is_active",
-                )
-            },
-        ),
-        (
-            "Dados Bancários",
-            {
-                "fields": (
-                    "agency_number",
-                    "account_number",
+                    "status",
+                    "priority",
                 )
             },
         ),
@@ -80,17 +64,26 @@ class FinancialAccountAdmin(admin.ModelAdmin):
             "Valores",
             {
                 "fields": (
-                    "initial_balance",
-                    "credit_limit",
+                    "target_amount",
+                    "saved_amount",
                 )
             },
         ),
         (
-            "Cartão de Crédito",
+            "Período",
             {
                 "fields": (
-                    "closing_day",
-                    "due_day",
+                    "start_date",
+                    "target_date",
+                )
+            },
+        ),
+        (
+            "Relacionamentos",
+            {
+                "fields": (
+                    "category",
+                    "related_account",
                 )
             },
         ),
@@ -104,4 +97,3 @@ class FinancialAccountAdmin(admin.ModelAdmin):
             },
         ),
     )
-    

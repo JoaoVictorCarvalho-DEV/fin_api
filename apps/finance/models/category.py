@@ -48,12 +48,12 @@ class Category(models.Model):
             models.Index(fields=['is_active']),
         ]
     
-    constraints = [
-        models.UniqueConstraint(
-            fields=["user", "name", "type"],
-            name="unique_category_per_user",
-        )
-    ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "name", "type"],
+                name="unique_category_per_user",
+            )
+        ]
     
         
     def __str__(self):
