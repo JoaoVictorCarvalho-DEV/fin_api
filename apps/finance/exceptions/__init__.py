@@ -39,3 +39,11 @@ from .transaction_exceptions import (
     TransactionCannotDeleteError,
     TransactionCannotUpdateError,
 )
+from .goal_exceptions import (
+    GoalNotFoundError,
+    GoalAlreadyExistsError,
+)
+from .budget_exceptions import (
+    BudgetNotFoundError,
+    BudgetAlreadyExistsError,
+)
