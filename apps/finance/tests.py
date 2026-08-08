@@ -5,8 +5,10 @@ from django.test import TestCase
 
 from apps.finance.models.category import Category
 from apps.finance.models.financial_account import FinancialAccount
+from apps.finance.models.goal import Goal
 from apps.finance.models.tag import Tag
 from apps.finance.models.transaction import Transaction
+from apps.finance.services.goal_service import GoalService
 from apps.finance.services.transaction_service import TransactionService
 
 
@@ -92,3 +94,45 @@ class TransactionServiceTests(TestCase):
         self.assertEqual(transaction.account, self.account)
         self.assertEqual(transaction.category, self.category)
         self.assertEqual(transaction.tags.count(), 1)
+
+
+class GoalServiceTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="goaltester",
+            email="goaltester@example.com",
+            password="12345678",
+        )
+
+        self.category = Category.objects.create(
+            user=self.user,
+            name="Reserva",
+            type=Category.CategoryType.INCOME,
+            color="#123456",
+        )
+
+        self.account = FinancialAccount.objects.create(
+            user=self.user,
+            name="Conta reserva",
+            account_type=FinancialAccount.AccountType.BANK,
+        )
+
+    def test_create_goal_for_user(self):
+        data = {
+            "name": "Viagem",
+            "target_amount": Decimal("1000.00"),
+            "saved_amount": Decimal("150.00"),
+            "start_date": "2024-01-01",
+            "target_date": "2024-12-31",
+            "status": Goal.StatusChoices.ACTIVE,
+            "category": self.category,
+            "related_account": self.account,
+            "description": "Meta de fim de ano",
+            "priority": 2,
+        }
+
+        goal = GoalService.create(self.user, data)
+
+        self.assertEqual(goal.user, self.user)
+        self.assertEqual(goal.name, "Viagem")
+        self.assertEqual(goal.related_account, self.account)
