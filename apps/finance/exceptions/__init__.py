@@ -12,3 +12,13 @@ from .tag_exceptions import (
     TagNotFoundError,
     TagAlreadyExistsError,
 )
+
+from .receipt_exceptions import (
+    ReceiptNotFoundError,
+    ReceiptAlreadyExistsError,
+    ReceiptFileRequiredError,
+    ReceiptFileAlreadyExistsError,
+    OCRProcessingError,
+    OCRAlreadyProcessingError,
+    OCRNotCompletedError,
+)
