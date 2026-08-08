@@ -47,3 +47,7 @@ from .budget_exceptions import (
     BudgetNotFoundError,
     BudgetAlreadyExistsError,
 )
+from .recurring_transaction_exceptions import (
+    RecurringTransactionNotFoundError,
+    RecurringTransactionAlreadyExistsError,
+)

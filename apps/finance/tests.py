@@ -6,9 +6,11 @@ from django.test import TestCase
 from apps.finance.models.category import Category
 from apps.finance.models.financial_account import FinancialAccount
 from apps.finance.models.goal import Goal
+from apps.finance.models.recurring_transaction import RecurringTransaction
 from apps.finance.models.tag import Tag
 from apps.finance.models.transaction import Transaction
 from apps.finance.services.goal_service import GoalService
+from apps.finance.services.recurring_transaction_service import RecurringTransactionService
 from apps.finance.services.transaction_service import TransactionService
 
 
@@ -136,3 +138,46 @@ class GoalServiceTests(TestCase):
         self.assertEqual(goal.user, self.user)
         self.assertEqual(goal.name, "Viagem")
         self.assertEqual(goal.related_account, self.account)
+
+
+class RecurringTransactionServiceTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="recurringtester",
+            email="recurringtester@example.com",
+            password="12345678",
+        )
+
+        self.account = FinancialAccount.objects.create(
+            user=self.user,
+            name="Conta recorrente",
+            account_type=FinancialAccount.AccountType.BANK,
+        )
+
+        self.category = Category.objects.create(
+            user=self.user,
+            name="Mensalidade",
+            type=Category.CategoryType.EXPENSE,
+            color="#654321",
+        )
+
+    def test_create_recurring_transaction_for_user(self):
+        data = {
+            "account": self.account,
+            "category": self.category,
+            "description": "Mensalidade de internet",
+            "amount": Decimal("89.90"),
+            "transaction_type": Transaction.TransactionType.EXPENSE,
+            "notes": "Cobrança mensal",
+            "frequency": RecurringTransaction.FrequencyChoices.MONTHLY,
+            "start_date": "2024-01-01",
+            "end_date": "2024-12-31",
+            "next_execution": "2024-01-01",
+            "is_active": True,
+        }
+
+        recurring_transaction = RecurringTransactionService.create(self.user, data)
+
+        self.assertEqual(recurring_transaction.user, self.user)
+        self.assertEqual(recurring_transaction.account, self.account)
+        self.assertEqual(recurring_transaction.category, self.category)
